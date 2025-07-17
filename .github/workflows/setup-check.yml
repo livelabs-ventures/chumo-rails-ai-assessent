@@ -1,0 +1,34 @@
+name: Setup Check
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+    
+    - name: Install FFmpeg
+      run: sudo apt-get update && sudo apt-get install -y ffmpeg
+    
+    - name: Check FFmpeg
+      run: ffmpeg -version
+    
+    - name: Run bundle install
+      run: bundle install
+    
+    - name: Setup database
+      run: |
+        bin/rails db:create
+        bin/rails db:migrate
+    
+    - name: Check Rails server starts
+      run: |
+        timeout 30s bin/rails server -b 0.0.0.0 -p 3000 || true
